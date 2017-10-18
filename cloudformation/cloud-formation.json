@@ -70,6 +70,22 @@
     "12AdminEmail": {
       "Type": "String",
       "Description": "Admin email used by mysql monitor, for example"
+    },
+    "PcfVpc": {
+      "Type": "String",
+      "Description": "The VPC Into Which the AWS Resources will be deployed."
+    },
+    "PcfPublicSubnet": {
+      "Type": "String",
+      "Description": "Pre-Created Public Subnet for NAT Instance"
+    },
+    "PcfPublicSubnet2": {
+      "Type": "String",
+      "Description": "Pre-Created Public Subnet for NAT Instance"
+    },
+    "PcfNatInstance": {
+      "Type": "String",
+      "Description": "Instance Id for NAT instance in Public Subnet"
     }
   },
   "Conditions": {
@@ -94,7 +110,11 @@
           "03OpsManagerIngress": {"Ref": "03OpsManagerIngress"},
           "04RdsDBName": {"Ref": "04RdsDBName"},
           "05RdsUsername": {"Ref": "05RdsUsername"},
-          "06RdsPassword": {"Ref": "06RdsPassword"}
+          "06RdsPassword": {"Ref": "06RdsPassword"},
+          "PcfVpc": {"Ref": "PcfVpc"},
+          "PcfPublicSubnet": {"Ref": "PcfPublicSubnet"},
+          "PcfPublicSubnet2": {"Ref": "PcfPublicSubnet2"},
+          "PcfNatInstance": {"Ref": "PcfNatInstance"}
         },
         "TemplateURL": {"Ref": "08OpsManagerTemplate"}
       }
@@ -1621,18 +1641,6 @@
     },
     "PcfPrivateSubnet2AvailabilityZone": {
       "Value": {"Fn::GetAtt": [ "OpsManStack", "Outputs.PcfPrivateSubnet2AvailabilityZone" ]}
-    },
-    "PcfPublicSubnetId": {
-      "Value": {"Fn::GetAtt": [ "OpsManStack", "Outputs.PcfPublicSubnetId" ]}
-    },
-    "PcfPublicSubnetId2": {
-      "Value": {"Fn::GetAtt": [ "OpsManStack", "Outputs.PcfPublicSubnetId2" ]}
-    },
-    "PcfPublicSubnetAvailabilityZone": {
-      "Value": { "Fn::GetAtt" : [ "OpsManStack", "Outputs.PcfPublicSubnetAvailabilityZone" ] }
-    },
-    "PcfPublicSubnetAvailabilityZone2": {
-      "Value": {"Fn::GetAtt": [ "OpsManStack", "Outputs.PcfPublicSubnetAvailabilityZone2" ]}
     },
     "PcfRdsAddress": {
       "Value": { "Fn::GetAtt": [ "OpsManStack", "Outputs.PcfRdsAddress" ]}

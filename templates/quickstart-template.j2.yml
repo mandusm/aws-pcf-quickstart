@@ -7,6 +7,15 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
     - Label:
+        default: VPC Configuration
+      Parameters:
+      - PcfVpc
+      - PcfPublicSubnet
+      - PcfPublicSubnet2
+      - PcfNatInstance
+      - PcfPublicSubnetAvailabilityZone
+      - PcfPublicSubnetAvailabilityZone2
+    - Label:
         default: Amazon EC2 Configuration
       Parameters:
       - PCFKeyPair
@@ -89,6 +98,24 @@ Metadata:
       CompanyName:
         default: Custom Branding Company Name
 Parameters:
+  PcfPublicSubnetAvailabilityZone:
+    Type: String
+    Description: "Public Subnet AZ"
+  PcfPublicSubnetAvailabilityZone2:
+    Type: String
+    Description: "Public Subnet AZ"
+  PcfVpc:
+    Type: String
+    Description: "Existing VPC ID"
+  PcfPublicSubnet:
+    Type: String
+    Description: "Existing Public Subnet ID"
+  PcfPublicSubnet2:
+    Type: String
+    Description: "Existing Public Subnet ID"
+  PcfNatInstance:
+    Type: String
+    Description: "Existing NAT Instance ID"
   NATInstanceType:
     Type: String
     AllowedValues:
@@ -261,6 +288,10 @@ Resources:
         10AllowHttpOnElb: !Ref AllowHttpOnElb
         11PivnetToken: !Ref PivnetToken
         12AdminEmail: !Ref AdminEmail
+        PcfVpc: !Ref PcfVpc
+        PcfPublicSubnet: !Ref PcfPublicSubnet
+        PcfPublicSubnet2: !Ref PcfPublicSubnet2
+        PcfNatInstance: !Ref PcfNatInstance
       TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/cloud-formation.template
   CustomResourceSQSQueue:
     Type: AWS::SQS::Queue
@@ -389,13 +420,13 @@ Resources:
         "PcfPublicSubnetId2": "${PCFBase.Outputs.PcfPublicSubnetId2}",
         "PcfElasticRuntimeS3PackagesBucket": "${PCFBase.Outputs.PcfElasticRuntimeS3PackagesBucket}",
         "PcfNumberOfAZs": "${NumberOfAZs}",
-        "PcfPublicSubnetAvailabilityZone": "${PCFBase.Outputs.PcfPublicSubnetAvailabilityZone}",
+        "PcfPublicSubnetAvailabilityZone": "${PcfPublicSubnetAvailabilityZone}",
         "PcfIamRole": "${PCFBase.Outputs.PcfIamRole}",
         "PcfElasticRuntimeS3ResourcesBucket": "${PCFBase.Outputs.PcfElasticRuntimeS3ResourcesBucket}",
         "PcfRdsPort": "${PCFBase.Outputs.PcfRdsPort}",
         "PcfOpsManagerS3Bucket": "${PCFBase.Outputs.PcfOpsManagerS3Bucket}",
         "PcfIamUserName": "${PCFBase.Outputs.PcfIamUserName}",
-        "PcfPublicSubnetAvailabilityZone2": "${PCFBase.Outputs.PcfPublicSubnetAvailabilityZone2}",
+        "PcfPublicSubnetAvailabilityZone2": "${PcfPublicSubnetAvailabilityZone2}",
         "PcfPrivateSubnetId": "${PCFBase.Outputs.PcfPrivateSubnetId}",
         "PcfPublicSubnetId": "${PCFBase.Outputs.PcfPublicSubnetId}",
         "PcfRdsDBName": "${PCFBase.Outputs.PcfRdsDBName}",
