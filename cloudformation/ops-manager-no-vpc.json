@@ -63,10 +63,6 @@
     "PcfPublicSubnet2": {
       "Type": "String",
       "Description": "Pre-Created Public Subnet for NAT Instance"
-    },
-    "PcfNatInstance": {
-      "Type": "String",
-      "Description": "Instance Id for NAT instance in Public Subnet"
     }
   },
   "Mappings": {
@@ -112,6 +108,9 @@
       },
       "sa-east-1": {
         "id": "ami-8bdab1e7"
+      },
+      "us-gov-west-1": {
+        "id": "ami-4b98182a"
       }
     }
   },
@@ -133,6 +132,40 @@
           {
             "Key": "Name",
             "Value": "pcf-private-subnet"
+          }
+        ]
+      }
+    },
+    "PcfNatSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "VpcId": {"Ref": "PcfVpc"},
+        "GroupDescription": "NAT Security Group",
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "100.64.0.0/16",
+            "IpProtocol": "-1"
+          }
+        ]
+      }
+    },
+    "PcfNatInstance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {"Fn::FindInMap" : [ "NATRegionToAmiMap", { "Ref" : "AWS::Region" }, "id"]},
+        "InstanceType": {"Ref": "02NATInstanceType"},
+        "KeyName": {"Ref": "01NATKeyPair"},
+        "SecurityGroupIds": [
+          {
+            "Ref": "PcfNatSecurityGroup"
+          }
+        ],
+        "SourceDestCheck": "false",
+        "SubnetId": {"Ref": "PcfPublicSubnet"},
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "NAT Instance"
           }
         ]
       }
@@ -571,10 +604,22 @@
         ]
       }
     },
+    "PCFRDSParameterGroup": {
+         "Type" : "AWS::RDS::DBParameterGroup",
+         "Properties" : {
+            "Description" : "Paramater Group to Disable Hostname Checking",
+            "Family" : "mysql5.6",
+            "Parameters" : {
+              "skip_name_resolve": 1
+            },
+            "Tags" : [ {"Key": "Name", "Value": "Rds-Skip_resolve"} ]
+         }
+      },
     "PcfRds": {
       "Type": "AWS::RDS::DBInstance",
       "Condition": "CreateRDS",
       "Properties": {
+        "DBParameterGroupName": {"Ref": "PCFRDSParameterGroup"},
         "AllocatedStorage": "100",
         "DBInstanceClass": "db.m4.large",
         "Engine": "MySQL",

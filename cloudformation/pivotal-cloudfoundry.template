@@ -266,9 +266,11 @@ Rules:
       Assertions:
       - Assert:
           Fn::Contains:
-          - {{supported_regions}}
+          - [us-east-1, us-west-1, us-west-2, eu-central-1, eu-west-1, ap-southeast-1, ap-southeast-2, ap-northeast-1, ap-northeast-2, sa-east-1]
+
           - !Ref AWS::Region
-        AssertDescription: This Quick Start is only available in a subset of regions. {{supported_regions}}
+        AssertDescription: This Quick Start is only available in a subset of regions. [us-east-1, us-west-1, us-west-2, eu-central-1, eu-west-1, ap-southeast-1, ap-southeast-2, ap-northeast-1, ap-northeast-2, sa-east-1]
+
   AcceptEULARule:
     Assertions:
     - Assert:
@@ -278,7 +280,39 @@ Rules:
       AssertDescription: Must accept the End User License Agreement for Pivotal Products
 Mappings:
   AMIMapping:
-    {{ami_mapping | indent}}
+    ap-northeast-1:
+      bootstrap: ami-b83cdcde
+      opsman: ami-36a57650
+    ap-northeast-2:
+      bootstrap: ami-3a8c5554
+      opsman: ami-7922f817
+    ap-southeast-1:
+      bootstrap: ami-c478eba7
+      opsman: ami-69d9a60a
+    ap-southeast-2:
+      bootstrap: ami-05081766
+      opsman: ami-d2dc3fb0
+    eu-central-1:
+      bootstrap: ami-ad3c91c2
+      opsman: ami-d18a37be
+    eu-west-1:
+      bootstrap: ami-ce49a0b7
+      opsman: ami-368b5d4f
+    sa-east-1:
+      bootstrap: ami-61196e0d
+      opsman: ami-0faad563
+    us-east-1:
+      bootstrap: ami-f7c4948c
+      opsman: ami-a26bacd8
+    us-west-1:
+      bootstrap: ami-25d1f845
+      opsman: ami-bb4a79db
+    us-west-2:
+      bootstrap: ami-47eb2a3f
+      opsman: ami-30d61348
+    us-gov-west-1:
+      bootstrap: ami-023ebc63
+      opsman: ami-6a4ecc0b
 Resources:
   PCFBase:
     Type: AWS::CloudFormation::Stack
@@ -425,7 +459,7 @@ Resources:
       Value: !Sub |
         {
         "PcfRdsPassword": "${RdsPassword}",
-        "PcfPublicSubnetId2": "${PCFBase.Outputs.PcfPublicSubnetId2}",
+        "PcfPublicSubnetId2": "${PcfPublicSubnet2}",
         "PcfElasticRuntimeS3PackagesBucket": "${PCFBase.Outputs.PcfElasticRuntimeS3PackagesBucket}",
         "PcfNumberOfAZs": "${NumberOfAZs}",
         "PcfPublicSubnetAvailabilityZone": "${PcfPublicSubnetAvailabilityZone}",
@@ -436,7 +470,7 @@ Resources:
         "PcfIamUserName": "${PCFBase.Outputs.PcfIamUserName}",
         "PcfPublicSubnetAvailabilityZone2": "${PcfPublicSubnetAvailabilityZone2}",
         "PcfPrivateSubnetId": "${PCFBase.Outputs.PcfPrivateSubnetId}",
-        "PcfPublicSubnetId": "${PCFBase.Outputs.PcfPublicSubnetId}",
+        "PcfPublicSubnetId": "${PcfPublicSubnet}",
         "PcfRdsDBName": "${PCFBase.Outputs.PcfRdsDBName}",
         "PcfVmsSecurityGroupId": "${PCFBase.Outputs.PcfVmsSecurityGroupId}",
         "PcfElbTcpDnsName": "${PCFBase.Outputs.PcfElbTcpDnsName}",
@@ -448,7 +482,7 @@ Resources:
         "PcfOpsManagerInstanceIP": "${OpsManagerIP}",
         "PcfPrivateSubnetAvailabilityZone": "${PCFBase.Outputs.PcfPrivateSubnetAvailabilityZone}",
         "PcfCustomResourceSQSQueueUrl": "${CustomResourceSQSQueue}",
-        "PcfVpc": "${PCFBase.Outputs.PcfVpc}",
+        "PcfVpc": "${PcfVpc}",
         "PcfElasticRuntimeS3DropletsBucket": "${PCFBase.Outputs.PcfElasticRuntimeS3DropletsBucket}",
         "PcfPrivateSubnet2Id": "${PCFBase.Outputs.PcfPrivateSubnet2Id}",
         "PcfIamUserAccessKey": "${PcfIamUserAccessKey}",
@@ -459,30 +493,6 @@ Resources:
         "PcfRdsUsername": "${PCFBase.Outputs.PcfRdsUsername}",
         "PcfCompanyName": "${CompanyName}"
         }
-  PcfNatSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      VpcId: !Ref PcfVpc
-      GroupDescription: NAT Security Group
-      SecurityGroupIngress:
-      - CidrIp: 100.64.0.0/16
-        IpProtocol: "-1"
-  PcfNatInstanceResource:
-    Type: AWS::EC2::Instance
-    Properties:
-      ImageId:
-        Fn::FindInMap:
-        - NATRegionToAmiMap
-        - !Ref AWS::Region
-        - NAT
-      InstanceType: !Ref NATInstanceType
-      KeyName: !Ref PCFKeyPair
-      SecurityGroupIds: !Ref PcfNatSecurityGroup
-      SourceDestCheck: false
-      SubnetId: !Ref PcfPublicSubnet
-      Tags:
-      - Key: Name
-        Value: PCF-Nat-Instance
   OpsManagerInstance:
     Type: AWS::EC2::Instance
     Properties:
@@ -502,12 +512,14 @@ Resources:
           DeleteOnTermination: true
           VolumeSize: 100
           VolumeType: gp2
-      NetworkInterfaces:
-      - AssociatePublicIpAddress: 'false'
-        DeviceIndex: '0'
-        GroupSet:
-        - !GetAtt PCFBase.Outputs.PcfOpsManagerSecurityGroupId
-        SubnetId: !GetAtt PCFBase.Outputs.PcfPublicSubnetId
+      SecurityGroups:
+        - !Ref PcfPublicSubnet
+      #NetworkInterfaces:
+      #- AssociatePublicIpAddress: 'false'
+      #  DeviceIndex: '0'
+      #  GroupSet:
+      #  - !GetAtt PCFBase.Outputs.PcfOpsManagerSecurityGroupId
+      #  SubnetId: !Ref PcfPublicSubnet
       SourceDestCheck: true
       Tags:
       - Key: Name
@@ -543,7 +555,7 @@ Resources:
         DeviceIndex: '0'
         GroupSet:
         - !GetAtt PCFBase.Outputs.PcfOpsManagerSecurityGroupId
-        SubnetId: !GetAtt PCFBase.Outputs.PcfPublicSubnetId
+        SubnetId: !Ref PcfPublicSubnet
       SourceDestCheck: true
       Tags:
       - Key: Name
@@ -553,6 +565,11 @@ Resources:
         !Base64
           Fn::Sub: |
             #!/bin/bash
+
+            #echo "Acquire::http::proxy \"${VPCProxyURL}\";" > /etc/apt/apt.conf.d/80proxy\n
+            #export http_proxy=${VPCProxyURL}/
+            #export https_proxy=${VPCProxyURL}/
+
             sudo /usr/bin/curl url -kLo /home/ubuntu/aws-cfn-bootstrap-latest.tar.gz "https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz"
             export DEBIAN_FRONTEND=noninteractive
             sudo /bin/mkdir /home/ubuntu/tiles

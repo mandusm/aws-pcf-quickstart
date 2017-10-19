@@ -82,10 +82,6 @@
     "PcfPublicSubnet2": {
       "Type": "String",
       "Description": "Pre-Created Public Subnet for NAT Instance"
-    },
-    "PcfNatInstance": {
-      "Type": "String",
-      "Description": "Instance Id for NAT instance in Public Subnet"
     }
   },
   "Conditions": {
@@ -113,8 +109,7 @@
           "06RdsPassword": {"Ref": "06RdsPassword"},
           "PcfVpc": {"Ref": "PcfVpc"},
           "PcfPublicSubnet": {"Ref": "PcfPublicSubnet"},
-          "PcfPublicSubnet2": {"Ref": "PcfPublicSubnet2"},
-          "PcfNatInstance": {"Ref": "PcfNatInstance"}
+          "PcfPublicSubnet2": {"Ref": "PcfPublicSubnet2"}
         },
         "TemplateURL": {"Ref": "08OpsManagerTemplate"}
       }
@@ -208,7 +203,7 @@
             }
           ]
         ]},
-        "Scheme": "internet-facing",
+        "Scheme": "internal",
         "SecurityGroups": [
           {
             "Ref": "PcfElbSecurityGroup"
@@ -267,7 +262,7 @@
             "Protocol": "tcp"
           }
         ],
-        "Scheme": "internet-facing",
+        "Scheme": "internal",
         "SecurityGroups": [
           {
             "Ref": "PcfElbSshSecurityGroup"
@@ -1425,7 +1420,7 @@
             "Protocol": "tcp"
           }
         ],
-        "Scheme": "internet-facing",
+        "Scheme": "internal",
         "SecurityGroups": [
           {
             "Ref": "PcfElbTcpSecurityGroup1"
